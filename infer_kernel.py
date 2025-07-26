@@ -1,6 +1,6 @@
 import numpy as np
-import pymc as pm
-import arviz as az
+# import pymc as pm
+# import arviz as az
 import pandas as pd 
 import pickle
 import json
@@ -98,30 +98,37 @@ fig,ax = plt.subplots()
 ax.plot(cdf.index,cdf['cases'],color='black')
 ax2 = ax.twinx()
 ax2.plot(cdf.index,cdf['Mean viral gene copies/L'])
-# ax.set_xlabel("Days before detection")
+ax.set_ylabel('Clinical cases')
+ax2.set_ylabel('Mean viral gene copies/L')
 fig.savefig('trajects.pdf')
 
-X = np.array([cdf['cases'].values[(j-F):(j+N-F)] for j in range(F,(cdf.shape[0]-N+F))])#/cdf['cases'].mean()
-Y = np.array(cdf['Mean viral gene copies/L'].values[F:(len(cdf['Mean viral gene copies/L'])-N+F)])/cdf['Mean viral gene copies/L'].mean()
-
-norm = cdf['Mean viral gene copies/L'].mean()
-
-with pm.Model() as shedding_model:
-    # S = pm.Gamma("S", alpha = 10, beta=0.1, shape=N) 
-    S = pm.HalfFlat("S",shape=N)
-    mu = pm.math.dot(X, S)
-    # Y_obs = pm.LogNormal("Y_obs", mu=mu, observed=Y) #alpha = mu, beta=100, observed=Y)
-    Y_obs = pm.Gamma("Y_obs", alpha = mu/50, beta=50, observed=Y)
-    trace = pm.sample(1000, return_inferencedata=True)
+shed_df = pd.DataFrame(np.array([lags,x.value]).T,columns=['lags','load'])
+shed_df.to_csv('inferred_kernel.csv')
 
 
-lags = np.arange(N) - F
-fig,ax = plt.subplots()
-az.plot_hdi(lags, trace.posterior["S"].values, hdi_prob=0.95,ax=ax)
-ax.plot(lags, np.median(trace.posterior["S"].values,axis=(0,1)), color="blue")
-ax.set_xlabel("Days before detection")
-fig.savefig('test_bayesian.pdf')
+# X = np.array([cdf['cases'].values[(j-F):(j+N-F)] for j in range(F,(cdf.shape[0]-N+F))])#/cdf['cases'].mean()
+# Y = np.array(cdf['Mean viral gene copies/L'].values[F:(len(cdf['Mean viral gene copies/L'])-N+F)])/cdf['Mean viral gene copies/L'].mean()
 
-plt.close('all')
+# norm = cdf['Mean viral gene copies/L'].mean()
+
+# with pm.Model() as shedding_model:
+#     # S = pm.Gamma("S", alpha = 10, beta=0.1, shape=N) 
+#     S = pm.HalfFlat("S",shape=N)
+#     mu = pm.math.dot(X, S)
+#     # Y_obs = pm.LogNormal("Y_obs", mu=mu, observed=Y) #alpha = mu, beta=100, observed=Y)
+#     Y_obs = pm.Gamma("Y_obs", alpha = mu/50, beta=50, observed=Y)
+#     trace = pm.sample(1000, return_inferencedata=True)
+
+
+# lags = np.arange(N) - F
+# fig,ax = plt.subplots()
+# az.plot_hdi(lags, trace.posterior["S"].values, hdi_prob=0.95,ax=ax)
+# ax.plot(lags, np.median(trace.posterior["S"].values,axis=(0,1)), color="blue")
+# ax.set_xlabel("Days before detection")
+# fig.savefig('test_bayesian.pdf')
+
+# plt.close('all')
+
+
 
 
